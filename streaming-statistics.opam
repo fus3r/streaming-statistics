@@ -1,0 +1,21 @@
+opam-version: "2.0"
+synopsis: "Streaming statistics with explicit accuracy and merge contracts"
+description: """
+A compact OCaml library for exact and approximate one-pass statistics.
+It keeps accuracy, storage, and merge capabilities explicit instead of giving
+every accumulator a false common interface.
+"""
+maintainer: "Riad Darwish"
+authors: ["Riad Darwish"]
+license: "MIT"
+homepage: "https://github.com/fus3r/streaming-statistics"
+bug-reports: "https://github.com/fus3r/streaming-statistics/issues"
+dev-repo: "git+https://github.com/fus3r/streaming-statistics.git"
+depends: [
+  "ocaml" {>= "5.1"}
+  "dune" {>= "3.12"}
+]
+build: [
+  ["dune" "subst"] {dev}
+  ["dune" "build" "-p" name "-j" jobs "@install"]
+]

@@ -1,0 +1,4 @@
+(library
+ (name streaming_statistics)
+ (public_name streaming-statistics)
+ (modules))
