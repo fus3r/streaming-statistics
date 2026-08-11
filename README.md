@@ -4,8 +4,9 @@ An OCaml library for statistics that update one observation at a time. Its API
 will keep three distinctions visible: exact versus approximate results,
 bounded versus growing storage, and summaries that can or cannot be merged.
 
-This first commit fixes the package boundary and statistical contracts. It does
-not yet expose a statistical accumulator.
+`Summary` is the first implemented accumulator. It maintains extrema, a
+compensated sum, Welford's mean and population or sample variance in constant
+space.
 
 ## Build and install
 
@@ -15,6 +16,22 @@ OCaml 5.1 or later and Dune 3.12 or later are required.
 dune build @all
 dune runtest
 opam install .
+```
+
+```ocaml
+open Streaming_statistics
+
+let stats = Summary.create ()
+
+let () =
+  List.iter
+    (fun x ->
+      match Summary.add stats x with
+      | Ok () -> ()
+      | Error `Non_finite -> invalid_arg "finite observations only"
+      | Error `Count_overflow -> failwith "observation count overflow")
+    [ 1.; 2.; 3.; 4. ];
+  Option.iter (Printf.printf "mean = %.2f\n") (Summary.mean stats)
 ```
 
 ## Planned v0.1 capabilities
