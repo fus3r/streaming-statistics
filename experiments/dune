@@ -1,0 +1,9 @@
+(executable
+ (name summary_stability)
+ (libraries streaming_statistics))
+
+(rule
+ (alias runtest)
+ (action
+  (run python3 %{dep:check_summary_stability.py} %{exe:summary_stability.exe}
+   %{dep:data/summary_stability.txt})))

@@ -6,7 +6,7 @@ bounded versus growing storage, and summaries that can or cannot be merged.
 
 `Summary` is the first implemented accumulator. It maintains extrema, a
 compensated sum, Welford's mean and population or sample variance in constant
-space.
+space. Independent summaries can be combined with Chan's pairwise formulas.
 
 ## Build and install
 
@@ -47,6 +47,13 @@ let () =
 
 The conventions for empty streams, estimators, non-finite values, quantiles,
 seeds, and merges are fixed in [docs/CONTRACTS.md](docs/CONTRACTS.md).
+
+## Numerical check
+
+`dune runtest` also compares sequential Welford updates and a partitioned Chan
+merge with a high-precision oracle on a small cancellation-prone corpus. The
+private naive baseline and tolerances are documented in
+[experiments/README.md](experiments/README.md).
 
 ## Scope
 

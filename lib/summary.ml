@@ -1,4 +1,5 @@
 type error = [ `Non_finite | `Count_overflow ]
+type merge_error = [ `Count_overflow ]
 
 type t = {
   mutable count : int64;
@@ -21,6 +22,17 @@ let create () =
     m2 = 0.;
   }
 
+let copy t =
+  {
+    count = t.count;
+    minimum = t.minimum;
+    maximum = t.maximum;
+    total = t.total;
+    correction = t.correction;
+    mean = t.mean;
+    m2 = t.m2;
+  }
+
 let count t = t.count
 
 (* Neumaier compensation also handles an addend larger than the running sum. *)
@@ -39,6 +51,13 @@ let update_mean ~old_count ~next_count mean x =
   else
     let old_weight = Int64.to_float old_count /. divisor in
     ((mean *. old_weight) +. (x /. divisor), delta)
+
+let merge_mean ~left_count ~right_count ~combined_count left right delta =
+  let right_weight = right_count /. combined_count in
+  if Float.is_finite delta then (left +. (delta *. right_weight), right_weight)
+  else
+    let left_weight = left_count /. combined_count in
+    ((left *. left_weight) +. (right *. right_weight), right_weight)
 
 let add t x =
   if not (Float.is_finite x) then Error `Non_finite
@@ -70,6 +89,55 @@ let add t x =
     t.mean <- next_mean;
     t.m2 <- next_m2;
     Ok ()
+
+let count_sum_overflows left right =
+  Int64.compare left (Int64.sub Int64.max_int right) > 0
+
+let merge left right : (t, merge_error) result =
+  if count_sum_overflows left.count right.count then Error `Count_overflow
+  else if Int64.equal left.count 0L then Ok (copy right)
+  else if Int64.equal right.count 0L then Ok (copy left)
+  else
+    let count = Int64.add left.count right.count in
+    let left_count = Int64.to_float left.count in
+    let right_count = Int64.to_float right.count in
+    let combined_count = Int64.to_float count in
+    let delta = right.mean -. left.mean in
+    let mean, right_weight =
+      merge_mean ~left_count ~right_count ~combined_count left.mean right.mean
+        delta
+    in
+    let m2 =
+      left.m2 +. right.m2 +. (delta *. delta *. (left_count *. right_weight))
+    in
+    let total, correction = compensated_add 0. 0. left.total in
+    let total, correction =
+      compensated_add total correction left.correction
+    in
+    let total, correction = compensated_add total correction right.total in
+    let total, correction =
+      compensated_add total correction right.correction
+    in
+    let minimum =
+      match (left.minimum, right.minimum) with
+      | Some a, Some b -> Some (Float.min a b)
+      | _ -> assert false
+    in
+    let maximum =
+      match (left.maximum, right.maximum) with
+      | Some a, Some b -> Some (Float.max a b)
+      | _ -> assert false
+    in
+    Ok
+      {
+        count;
+        minimum;
+        maximum;
+        total;
+        correction;
+        mean;
+        m2;
+      }
 
 let sum t = t.total +. t.correction
 let min t = t.minimum

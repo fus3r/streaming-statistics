@@ -60,10 +60,21 @@ let test_compensated_sum () =
   check_close "compensated sum" 1. (S.sum summary)
 
 let test_opposite_extrema_keep_representable_mean () =
-  let summary = S.create () in
-  add_all summary [ -.Float.max_float; Float.max_float ];
+  let sequential = S.create () in
+  add_all sequential [ -.Float.max_float; Float.max_float ];
   check_close "opposite-extrema mean" 0.
-    (get_some "opposite-extrema mean" (S.mean summary))
+    (get_some "opposite-extrema mean" (S.mean sequential));
+  let left = S.create () in
+  let right = S.create () in
+  add_all left [ -.Float.max_float ];
+  add_all right [ Float.max_float ];
+  let merged =
+    match S.merge left right with
+    | Ok summary -> summary
+    | Error _ -> failwith "opposite extrema failed to merge"
+  in
+  check_close "merged opposite-extrema mean" 0.
+    (get_some "merged opposite-extrema mean" (S.mean merged))
 
 let test_rejection_is_transactional () =
   let summary = S.create () in
@@ -88,8 +99,92 @@ let test_rejection_is_transactional () =
      S.population_variance summary)
   then failwith "rejected input changed the summary"
 
+let test_merge_is_pure () =
+  let left = S.create () in
+  let right = S.create () in
+  let monolithic = S.create () in
+  add_all left [ 1.; 2. ];
+  add_all right [ 3.; 4. ];
+  add_all monolithic [ 1.; 2.; 3.; 4. ];
+  let left_before = (S.count left, S.sum left, S.mean left) in
+  let right_before = (S.count right, S.sum right, S.mean right) in
+  let merged =
+    match S.merge left right with
+    | Ok summary -> summary
+    | Error _ -> failwith "unexpected merge error"
+  in
+  if S.count merged <> S.count monolithic then failwith "merged count differs";
+  check_close "partitioned sum" (S.sum monolithic) (S.sum merged);
+  check_close "partitioned minimum"
+    (get_some "monolithic minimum" (S.min monolithic))
+    (get_some "partitioned minimum" (S.min merged));
+  check_close "partitioned maximum"
+    (get_some "monolithic maximum" (S.max monolithic))
+    (get_some "partitioned maximum" (S.max merged));
+  check_close "partitioned mean"
+    (get_some "monolithic mean" (S.mean monolithic))
+    (get_some "partitioned mean" (S.mean merged));
+  check_close "partitioned variance"
+    (get_some "monolithic variance" (S.population_variance monolithic))
+    (get_some "partitioned variance" (S.population_variance merged));
+  if left_before <> (S.count left, S.sum left, S.mean left) then
+    failwith "merge changed its left input";
+  if right_before <> (S.count right, S.sum right, S.mean right) then
+    failwith "merge changed its right input";
+  add_all merged [ 5. ];
+  if S.count left <> 2L then failwith "merged state aliases its left input"
+
+let test_empty_partition_merge () =
+  let populated = S.create () in
+  let empty = S.create () in
+  add_all populated [ 1.; 2.; 3.; 4. ];
+  let merge_ok left right =
+    match S.merge left right with
+    | Ok summary -> summary
+    | Error _ -> failwith "empty partition merge failed"
+  in
+  let results = [ merge_ok empty populated; merge_ok populated empty ] in
+  List.iter
+    (fun merged ->
+      if S.count merged <> S.count populated then
+        failwith "empty partition changed the count";
+      check_close "empty-partition sum" (S.sum populated) (S.sum merged);
+      check_close "empty-partition mean"
+        (get_some "populated mean" (S.mean populated))
+        (get_some "empty-partition mean" (S.mean merged));
+      check_close "empty-partition variance"
+        (get_some "populated variance" (S.population_variance populated))
+        (get_some "empty-partition variance" (S.population_variance merged));
+      add_all merged [ 5. ])
+    results;
+  if S.count populated <> 4L then
+    failwith "empty partition merge aliases its populated input"
+
+let test_merge_count_overflow () =
+  let initial = S.create () in
+  add_all initial [ 1. ];
+  let merge_ok left right =
+    match S.merge left right with
+    | Ok merged -> merged
+    | Error _ -> failwith "count overflow reported too early"
+  in
+  let rec double state remaining =
+    if remaining = 0 then state
+    else double (merge_ok state state) (remaining - 1)
+  in
+  let large = double initial 62 in
+  let before = (S.count large, S.sum large, S.mean large) in
+  (match S.merge large large with
+  | Error `Count_overflow -> ()
+  | Ok _ -> failwith "overflowing merge was not rejected");
+  if before <> (S.count large, S.sum large, S.mean large) then
+    failwith "overflowing merge changed its input"
+
 let () =
   test_running_statistics ();
   test_compensated_sum ();
   test_opposite_extrema_keep_representable_mean ();
-  test_rejection_is_transactional ()
+  test_rejection_is_transactional ();
+  test_merge_is_pure ();
+  test_empty_partition_merge ();
+  test_merge_count_overflow ()

@@ -31,7 +31,10 @@ Insertion order, partitioning, and reduction shape can change low-order bits.
 Bitwise associativity is not promised. Finite inputs can also produce a
 non-finite result when an intermediate or final moment exceeds binary64 range.
 
-Merge operations return a new state and leave both inputs unchanged.
+Merge operations return a new state and leave both inputs unchanged. An empty
+`Summary` is an identity for merging, and the result is still a fresh state.
+`Summary.merge` can report only `Count_overflow`, because its inputs contain
+observations that have already passed validation.
 
 ## Quantiles
 

@@ -5,6 +5,9 @@ type t
 (** Rejected input or exhausted [int64] observation count. *)
 type error = [ `Non_finite | `Count_overflow ]
 
+(** Exhausted combined observation count. *)
+type merge_error = [ `Count_overflow ]
+
 (** [create ()] returns an empty mutable accumulator. *)
 val create : unit -> t
 
@@ -14,6 +17,10 @@ val count : t -> int64
 (** [add t x] updates [t]. Non-finite inputs and count overflow are reported
     without changing [t]. *)
 val add : t -> float -> (unit, error) result
+
+(** [merge left right] returns their Chan-combined summary without changing
+    either input. *)
+val merge : t -> t -> (t, merge_error) result
 
 (** Compensated sum. The sum of an empty stream is [0.]. *)
 val sum : t -> float
