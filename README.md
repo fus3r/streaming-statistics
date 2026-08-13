@@ -1,12 +1,13 @@
 # streaming-statistics
 
 An OCaml library for statistics that update one observation at a time. Its API
-will keep three distinctions visible: exact versus approximate results,
+keeps three distinctions visible: exact versus approximate results,
 bounded versus growing storage, and summaries that can or cannot be merged.
 
-`Summary` is the first implemented accumulator. It maintains extrema, a
-compensated sum, Welford's mean and population or sample variance in constant
-space. Independent summaries can be combined with Chan's pairwise formulas.
+`Summary` maintains extrema, a compensated sum, Welford's mean, and population
+or sample variance. `Bivariate` maintains covariance, Pearson correlation, and
+simple linear regression. Both use constant-size state and merge independent
+partitions with centred-moment formulas.
 
 ## Build and install
 

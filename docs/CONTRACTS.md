@@ -19,22 +19,28 @@ Observation counts use `int64`. An update or merge that would exceed
 - extrema, means, variances, and quantiles return `None` for an empty stream;
 - sample variance and covariance require at least two observations;
 - correlation is undefined when either marginal variance is zero;
-- simple regression is undefined when the explanatory variance is zero.
+- simple regression is undefined when the explanatory variance is zero;
+- correlation and regression return `None` if their normalized result cannot be
+  represented as a finite binary64 value. Correlation also returns `None` when
+  accumulated roundoff puts it materially outside `[-1, 1]`; only an endpoint
+  overshoot within eight binary64 epsilons is rounded to that endpoint.
 
 Population quantities divide by `n`; sample quantities divide by `n - 1`.
 Undefined statistics use `option` rather than a sentinel float.
 
 ## Floating-point results
 
-Moment updates and merges are exact in real arithmetic, not in binary64.
-Insertion order, partitioning, and reduction shape can change low-order bits.
-Bitwise associativity is not promised. Finite inputs can also produce a
-non-finite result when an intermediate or final moment exceeds binary64 range.
+`Summary` uses Welford updates and `Bivariate` uses the corresponding centred
+co-moment update. Their pairwise merges use Chan's formulas. These operations
+are exact in real arithmetic, not in binary64. Insertion order, partitioning,
+and reduction shape can change low-order bits. Bitwise associativity is not
+promised. Finite inputs can also produce a non-finite result when an
+intermediate or final moment exceeds binary64 range.
 
 Merge operations return a new state and leave both inputs unchanged. An empty
-`Summary` is an identity for merging, and the result is still a fresh state.
-`Summary.merge` can report only `Count_overflow`, because its inputs contain
-observations that have already passed validation.
+`Summary` or `Bivariate` is an identity for its merge, and the result is still a
+fresh state. Their merge functions can report only `Count_overflow`, because
+their inputs contain observations that have already passed validation.
 
 ## Quantiles
 

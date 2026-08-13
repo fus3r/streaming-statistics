@@ -160,7 +160,7 @@ let test_empty_partition_merge () =
   if S.count populated <> 4L then
     failwith "empty partition merge aliases its populated input"
 
-let test_merge_count_overflow () =
+let test_count_overflow () =
   let initial = S.create () in
   add_all initial [ 1. ];
   let merge_ok left right =
@@ -173,12 +173,30 @@ let test_merge_count_overflow () =
     else double (merge_ok state state) (remaining - 1)
   in
   let large = double initial 62 in
+  if not (Int64.equal (S.count large) 4_611_686_018_427_387_904L) then
+    failwith "unexpected count before overflow";
   let before = (S.count large, S.sum large, S.mean large) in
   (match S.merge large large with
   | Error `Count_overflow -> ()
   | Ok _ -> failwith "overflowing merge was not rejected");
   if before <> (S.count large, S.sum large, S.mean large) then
-    failwith "overflowing merge changed its input"
+    failwith "overflowing merge changed its input";
+  let rec fill_bits total power remaining =
+    if remaining = 0 then total
+    else
+      let next_power = merge_ok power power in
+      fill_bits (merge_ok total next_power) next_power (remaining - 1)
+  in
+  let full = fill_bits initial initial 62 in
+  if not (Int64.equal (S.count full) Int64.max_int) then
+    failwith "failed to construct the maximum count";
+  let before = (S.count full, S.sum full, S.mean full) in
+  (match S.add full 1. with
+  | Error `Count_overflow -> ()
+  | Error `Non_finite -> failwith "unexpected non-finite add error"
+  | Ok () -> failwith "overflowing add was not rejected");
+  if before <> (S.count full, S.sum full, S.mean full) then
+    failwith "overflowing add changed the summary"
 
 let () =
   test_running_statistics ();
@@ -187,4 +205,4 @@ let () =
   test_rejection_is_transactional ();
   test_merge_is_pure ();
   test_empty_partition_merge ();
-  test_merge_count_overflow ()
+  test_count_overflow ()
