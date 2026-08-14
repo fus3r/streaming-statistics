@@ -1,4 +1,5 @@
 (library
  (name streaming_statistics)
  (public_name streaming-statistics)
- (modules Summary Bivariate))
+ (modules Summary Bivariate Float_heap Exact_median)
+ (private_modules Float_heap))

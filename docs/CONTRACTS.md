@@ -10,8 +10,9 @@ Numeric accumulators accept finite IEEE-754 binary64 values. `NaN` and both
 infinities are rejected before state changes. Standalone reservoir sampling is
 polymorphic and does not impose this numeric restriction.
 
-Observation counts use `int64`. An update or merge that would exceed
-`Int64.max_int` reports `Count_overflow` without changing its input.
+`Summary` and `Bivariate` observation counts use `int64`. An update or merge
+that would exceed `Int64.max_int` reports `Count_overflow` without changing its
+input.
 
 ## Empty and degenerate states
 
@@ -55,6 +56,10 @@ The binary64 value of `q` is interpreted exactly when this index is formed.
 Exact median instead averages the two middle observations for an even count.
 Approximate rank error treats equal values as the whole interval occupied by
 the tie.
+
+`Exact_median` keeps the lower half in a max-heap and the upper half in a
+min-heap. It inserts in `O(log n)`, reads the heap roots in `O(1)`, retains all
+observations in `O(n)` storage, and does not expose a merge operation.
 
 ## Randomness and compatibility
 

@@ -9,6 +9,10 @@ or sample variance. `Bivariate` maintains covariance, Pearson correlation, and
 simple linear regression. Both use constant-size state and merge independent
 partitions with centred-moment formulas.
 
+`Exact_median` retains finite observations in a max-heap and a min-heap. An
+insertion costs `O(log n)`, reading the median costs `O(1)`, and storage is
+`O(n)`. It deliberately exposes no merge operation.
+
 ## Build and install
 
 OCaml 5.1 or later and Dune 3.12 or later are required.
