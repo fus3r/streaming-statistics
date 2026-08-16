@@ -1,4 +1,22 @@
-# Summary stability gate
+# Numerical checks
+
+## Reservoir uniformity diagnostic
+
+The reservoir check runs the fixed Algorithm R protocol over 50,000 explicit
+seeds, a stream of 32 distinct positions, and capacity 4:
+
+```sh
+dune exec experiments/reservoir_uniformity.exe
+```
+
+Each position has marginal inclusion probability `4 / 32`. The command reports
+the largest absolute deviation from the expected hit count in binomial standard
+deviations, and fails above a pre-specified six-standard-deviation limit. This
+is a diagnostic for material positional bias in this fixed protocol, not proof
+of pseudorandom independence or a general statistical guarantee. It is kept
+outside the `runtest` alias so CI checks only deterministic contracts.
+
+## Summary stability gate
 
 This directory keeps numerical experiments outside the library API. The J3 gate
 uses twelve exactly representable integer-valued observations near `1e9`, where

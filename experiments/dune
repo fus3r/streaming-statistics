@@ -2,6 +2,10 @@
  (name summary_stability)
  (libraries streaming_statistics))
 
+(executable
+ (name reservoir_uniformity)
+ (libraries streaming_statistics))
+
 (rule
  (alias runtest)
  (action

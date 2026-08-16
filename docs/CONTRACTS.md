@@ -14,6 +14,10 @@ polymorphic and does not impose this numeric restriction.
 that would exceed `Int64.max_int` reports `Count_overflow` without changing its
 input.
 
+`Reservoir` also uses an `int64` observation count. An addition at
+`Int64.max_int` reports `Count_overflow` before changing its sample or random
+state.
+
 ## Empty and degenerate states
 
 - count is defined for every state;
@@ -66,9 +70,11 @@ observations in `O(n)` storage, and does not expose a merge operation.
 Randomized structures require an explicit seed and own their random state.
 Equal seeds and operation sequences reproduce with a fixed OCaml toolchain.
 
-Reservoir sampling does not expose a merge operation. KLL merge requires equal
-capacity parameters and an explicit seed for compactions in the result. A
-merged sketch need not equal one built from the concatenated raw streams.
+`Reservoir` implements Algorithm R with a fixed positive capacity. It returns a
+copy of its retained slots and does not expose a merge operation. KLL merge
+requires equal capacity parameters and an explicit seed for compactions in the
+result. A merged sketch need not equal one built from the concatenated raw
+streams.
 
 ## Planned capability matrix
 

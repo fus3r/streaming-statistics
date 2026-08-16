@@ -13,6 +13,10 @@ partitions with centred-moment formulas.
 insertion costs `O(log n)`, reading the median costs `O(1)`, and storage is
 `O(n)`. It deliberately exposes no merge operation.
 
+`Reservoir` implements Algorithm R for polymorphic streams. Its capacity and
+seed are explicit, it retains at most `k` observations, and `sample` returns a
+copy of its slots. It deliberately exposes no merge operation.
+
 ## Build and install
 
 OCaml 5.1 or later and Dune 3.12 or later are required.
