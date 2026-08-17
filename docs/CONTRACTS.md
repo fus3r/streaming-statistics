@@ -14,6 +14,10 @@ polymorphic and does not impose this numeric restriction.
 that would exceed `Int64.max_int` reports `Count_overflow` without changing its
 input.
 
+`Kll` also uses an `int64` observation count. An addition at
+`Int64.max_int`, or a non-finite addition, is rejected before changing its
+levels or consuming randomness.
+
 `Reservoir` also uses an `int64` observation count. An addition at
 `Int64.max_int` reports `Count_overflow` before changing its sample or random
 state.
@@ -64,6 +68,14 @@ the tie.
 `Exact_median` keeps the lower half in a max-heap and the upper half in a
 min-heap. It inserts in `O(log n)`, reads the heap roots in `O(1)`, retains all
 observations in `O(n)` storage, and does not expose a merge operation.
+
+The current `Kll` API exposes its seeded compaction hierarchy, not queries or
+merge. Level `i` has weight `2^i`. With `h` levels, its capacity is the
+configured capacity reduced `h - i - 1` times by `ceil(2k/3)`, with a minimum
+of eight. Compaction sorts an overflowing level and randomly promotes one
+parity; an odd population keeps one randomly selected endpoint at its current
+weight. The configured capacity controls this schedule but is neither a strict
+item ceiling nor, by itself, a claimed rank-error guarantee.
 
 ## Randomness and compatibility
 

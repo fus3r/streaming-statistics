@@ -17,6 +17,15 @@ insertion costs `O(log n)`, reading the median costs `O(1)`, and storage is
 seed are explicit, it retains at most `k` observations, and `sample` returns a
 copy of its slots. It deliberately exposes no merge operation.
 
+`Kll` now provides the seeded compaction core for finite floating-point
+streams. It keeps weighted levels under a concrete decreasing-capacity
+schedule and exposes both the accepted count and the number of retained
+values. Rank/quantile queries and sketch merging remain separate planned
+capabilities; no epsilon guarantee is inferred from the capacity parameter.
+It applies the compactor principle from the
+[KLL paper](https://arxiv.org/abs/1603.05346) but is not a byte-compatible port
+of Apache DataSketches.
+
 ## Build and install
 
 OCaml 5.1 or later and Dune 3.12 or later are required.
