@@ -15,8 +15,8 @@ that would exceed `Int64.max_int` reports `Count_overflow` without changing its
 input.
 
 `Kll` also uses an `int64` observation count. An addition at
-`Int64.max_int`, or a non-finite addition, is rejected before changing its
-levels or consuming randomness.
+`Int64.max_int`, a merge whose combined count would overflow, or a non-finite
+addition is rejected before changing an input or consuming its randomness.
 
 `Reservoir` also uses an `int64` observation count. An addition at
 `Int64.max_int` reports `Count_overflow` before changing its sample or random
@@ -69,13 +69,21 @@ the tie.
 min-heap. It inserts in `O(log n)`, reads the heap roots in `O(1)`, retains all
 observations in `O(n)` storage, and does not expose a merge operation.
 
-The current `Kll` API exposes its seeded compaction hierarchy, not queries or
-merge. Level `i` has weight `2^i`. With `h` levels, its capacity is the
-configured capacity reduced `h - i - 1` times by `ceil(2k/3)`, with a minimum
-of eight. Compaction sorts an overflowing level and randomly promotes one
-parity; an odd population keeps one randomly selected endpoint at its current
-weight. The configured capacity controls this schedule but is neither a strict
-item ceiling nor, by itself, a claimed rank-error guarantee.
+`Kll.quantile` returns the first retained value whose cumulative weight crosses
+the requested lower-quantile index. At zero and one it returns the exact stream
+extrema tracked separately, even if compaction has removed those values from
+the weighted levels. Values are not interpolated. All retained weights equal
+to a value contribute to the same tie; empirical rank error should therefore
+be measured against the full rank interval occupied by that tie. `Kll.rank`
+uses an inclusive rank, so all retained weight equal to the query value is
+counted.
+
+KLL level `i` has weight `2^i`. With `h` levels, its capacity is the configured
+capacity reduced `h - i - 1` times by `ceil(2k/3)`, with a minimum of eight.
+Compaction sorts an overflowing level and randomly promotes one parity; an odd
+population keeps one randomly selected endpoint at its current weight. The
+configured capacity controls this schedule but is neither a strict item
+ceiling nor, by itself, a claimed rank-error guarantee.
 
 ## Randomness and compatibility
 

@@ -5,9 +5,14 @@ type t = {
   random : Random.State.t;
   mutable count : int64;
   mutable levels : level array;
+  mutable minimum : float;
+  mutable maximum : float;
 }
 
 type add_error = [ `Non_finite | `Count_overflow ]
+
+type merge_error =
+  [ `Incompatible_capacity of int * int | `Count_overflow ]
 
 let minimum_level_capacity = 8
 
@@ -29,6 +34,8 @@ let create ~capacity ~seed () =
     random = Random.State.make [| seed |];
     count = 0L;
     levels = [| make_level (capacity + 1) |];
+    minimum = nan;
+    maximum = nan;
   }
 
 let capacity state = state.capacity
@@ -36,6 +43,12 @@ let count state = state.count
 
 let retained state =
   Array.fold_left (fun total level -> total + level.length) 0 state.levels
+
+let minimum state =
+  if Int64.equal state.count 0L then None else Some state.minimum
+
+let maximum state =
+  if Int64.equal state.count 0L then None else Some state.maximum
 
 (* [ceil (2 * value / 3)] without evaluating the potentially overflowing
    product [2 * value]. *)
@@ -129,14 +142,201 @@ let normalize state =
   loop ();
   trim_storage state
 
+let update_extrema state value =
+  if Int64.equal state.count 0L then (
+    state.minimum <- value;
+    state.maximum <- value)
+  else (
+    if Float.compare value state.minimum < 0 then state.minimum <- value;
+    if Float.compare value state.maximum > 0 then state.maximum <- value)
+
 let add state value =
   if not (is_finite value) then Error `Non_finite
   else if Int64.equal state.count Int64.max_int then Error `Count_overflow
   else (
+    update_extrema state value;
     push state.levels.(0) value;
     state.count <- Int64.succ state.count;
     normalize state;
     Ok ())
+
+type weighted = { value : float; weight : int64 }
+
+let weighted_items state =
+  let items = Array.make (retained state) { value = 0.0; weight = 0L } in
+  let output = ref 0 in
+  Array.iteri
+    (fun index level ->
+      if index >= 63 && level.length > 0 then
+        invalid_arg "Kll: weighted level exceeds Int64.t";
+      let weight = Int64.shift_left 1L index in
+      for item = 0 to level.length - 1 do
+        items.(!output) <- { value = level.data.(item); weight };
+        incr output
+      done)
+    state.levels;
+  Array.sort (fun left right -> Float.compare left.value right.value) items;
+  items
+
+let require_finite caller value =
+  if not (is_finite value) then
+    invalid_arg (caller ^ ": expected a finite floating-point value")
+
+let rank state value =
+  require_finite "Kll.rank" value;
+  if Int64.equal state.count 0L then None
+  else
+    let cumulative = ref 0L in
+    let items = weighted_items state in
+    let index = ref 0 in
+    while
+      !index < Array.length items
+      && Float.compare items.(!index).value value <= 0
+    do
+      cumulative := Int64.add !cumulative items.(!index).weight;
+      incr index
+    done;
+    Some (Int64.to_float !cumulative /. Int64.to_float state.count)
+
+let limb_bits = 30
+let limb_mask = Int64.pred (Int64.shift_left 1L limb_bits)
+
+let positive_int64_limbs value =
+  [|
+    Int64.logand value limb_mask;
+    Int64.logand (Int64.shift_right_logical value limb_bits) limb_mask;
+    Int64.shift_right_logical value (2 * limb_bits);
+  |]
+
+let mantissa_limbs value =
+  [|
+    Int64.logand value limb_mask;
+    Int64.shift_right_logical value limb_bits;
+  |]
+
+let multiply_limbs left right =
+  let product = Array.make (Array.length left + Array.length right + 1) 0L in
+  Array.iteri
+    (fun left_index left_limb ->
+      Array.iteri
+        (fun right_index right_limb ->
+          let index = left_index + right_index in
+          product.(index) <-
+            Int64.add product.(index) (Int64.mul left_limb right_limb))
+        right)
+    left;
+  for index = 0 to Array.length product - 2 do
+    let carry = Int64.shift_right_logical product.(index) limb_bits in
+    product.(index) <- Int64.logand product.(index) limb_mask;
+    product.(index + 1) <- Int64.add product.(index + 1) carry
+  done;
+  product
+
+let shift_limbs_right limbs shift =
+  let first_limb = shift / limb_bits in
+  if first_limb >= Array.length limbs then 0L
+  else
+    let offset = shift mod limb_bits in
+    let output_length = Array.length limbs - first_limb in
+    let output = Array.make output_length 0L in
+    for index = 0 to output_length - 1 do
+      let source = first_limb + index in
+      let lower = Int64.shift_right_logical limbs.(source) offset in
+      let upper =
+        if offset = 0 || source + 1 >= Array.length limbs then 0L
+        else
+          let upper_mask = Int64.pred (Int64.shift_left 1L offset) in
+          Int64.shift_left
+            (Int64.logand limbs.(source + 1) upper_mask)
+            (limb_bits - offset)
+      in
+      output.(index) <- Int64.logor lower upper
+    done;
+    Array.fold_right
+      (fun limb result ->
+        Int64.logor (Int64.shift_left result limb_bits) limb)
+      output 0L
+
+let lower_quantile_target count q =
+  let last_index = Int64.pred count in
+  if q = 0.0 then 0L
+  else if q = 1.0 then last_index
+  else
+    let bits = Int64.bits_of_float q in
+    let exponent =
+      Int64.to_int
+        (Int64.logand (Int64.shift_right_logical bits 52) 0x7ffL)
+    in
+    let fraction = Int64.logand bits 0x000f_ffff_ffff_ffffL in
+    let mantissa, shift =
+      if exponent = 0 then (fraction, 1_074)
+      else (Int64.logor fraction 0x0010_0000_0000_0000L, 1_075 - exponent)
+    in
+    multiply_limbs (positive_int64_limbs last_index)
+      (mantissa_limbs mantissa)
+    |> fun product -> shift_limbs_right product shift
+
+let quantile state ~q =
+  require_finite "Kll.quantile" q;
+  if q < 0.0 || q > 1.0 then
+    invalid_arg "Kll.quantile: q must lie in the closed interval [0, 1]";
+  if Int64.equal state.count 0L then None
+  else if q = 0.0 then Some state.minimum
+  else if q = 1.0 then Some state.maximum
+  else
+    let items = weighted_items state in
+    let target = lower_quantile_target state.count q in
+    let cumulative = ref 0L in
+    let index = ref 0 in
+    while
+      !index < Array.length items - 1
+      && Int64.compare
+           (Int64.add !cumulative items.(!index).weight)
+           target
+         <= 0
+    do
+      cumulative := Int64.add !cumulative items.(!index).weight;
+      incr index
+    done;
+    Some items.(!index).value
+
+let copy_level_items source target =
+  for index = 0 to source.length - 1 do
+    push target source.data.(index)
+  done
+
+let merge ~seed left right =
+  if left.capacity <> right.capacity then
+    Error (`Incompatible_capacity (left.capacity, right.capacity))
+  else if Int64.compare left.count (Int64.sub Int64.max_int right.count) > 0
+  then Error `Count_overflow
+  else
+    let merged = create ~capacity:left.capacity ~seed () in
+    let number_of_levels =
+      Int.max (Array.length left.levels) (Array.length right.levels)
+    in
+    while Array.length merged.levels < number_of_levels do
+      append_top_level merged
+    done;
+    Array.iteri
+      (fun index level -> copy_level_items level merged.levels.(index))
+      left.levels;
+    Array.iteri
+      (fun index level -> copy_level_items level merged.levels.(index))
+      right.levels;
+    merged.count <- Int64.add left.count right.count;
+    if not (Int64.equal merged.count 0L) then (
+      if Int64.equal left.count 0L then (
+        merged.minimum <- right.minimum;
+        merged.maximum <- right.maximum)
+      else if Int64.equal right.count 0L then (
+        merged.minimum <- left.minimum;
+        merged.maximum <- left.maximum)
+      else (
+        merged.minimum <- Float.min left.minimum right.minimum;
+        merged.maximum <- Float.max left.maximum right.maximum));
+    normalize merged;
+    Ok merged
 
 exception Invariant_failure of string
 
@@ -147,8 +347,14 @@ let check_invariants state =
     if Array.length state.levels = 0 then
       raise (Invariant_failure "the level array is empty");
     if state.count < 0L then raise (Invariant_failure "the count is negative");
-    if state.count = 0L && retained state <> 0 then
-      raise (Invariant_failure "an empty sketch retains values");
+    if Int64.equal state.count 0L then (
+      if retained state <> 0 then
+        raise (Invariant_failure "an empty sketch retains values"))
+    else (
+      if not (is_finite state.minimum && is_finite state.maximum) then
+        raise (Invariant_failure "non-finite extrema in a non-empty sketch");
+      if Float.compare state.minimum state.maximum > 0 then
+        raise (Invariant_failure "minimum exceeds maximum"));
     if
       Array.length state.levels > 1
       && state.levels.(Array.length state.levels - 1).length = 0
@@ -166,8 +372,15 @@ let check_invariants state =
           raise (Invariant_failure "a non-empty level has an overflowing weight");
         let weight = Int64.shift_left 1L index in
         for item = 0 to level.length - 1 do
-          if not (is_finite level.data.(item)) then
+          let value = level.data.(item) in
+          if not (is_finite value) then
             raise (Invariant_failure "a retained value is not finite");
+          if
+            (not (Int64.equal state.count 0L))
+            && (Float.compare value state.minimum < 0
+               || Float.compare value state.maximum > 0)
+          then
+            raise (Invariant_failure "a retained value lies outside the extrema");
           if Int64.compare !total_weight (Int64.sub state.count weight) > 0 then
             raise
               (Invariant_failure
