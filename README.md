@@ -26,6 +26,10 @@ capacity parameter. The implementation applies the compactor principle from the
 [KLL paper](https://arxiv.org/abs/1603.05346) but is not a byte-compatible port
 of Apache DataSketches.
 
+`Bundle` feeds a `Summary` and configured exact median, reservoir, and KLL
+components in one pass. It keeps their distinct query, storage, and merge
+contracts instead of imposing a universal accumulator interface.
+
 ## Build and install
 
 OCaml 5.1 or later and Dune 3.12 or later are required.
@@ -33,6 +37,8 @@ OCaml 5.1 or later and Dune 3.12 or later are required.
 ```sh
 dune build @all
 dune runtest
+dune exec examples/basic.exe
+dune exec examples/quantiles.exe
 opam install .
 ```
 
@@ -52,7 +58,7 @@ let () =
   Option.iter (Printf.printf "mean = %.2f\n") (Summary.mean stats)
 ```
 
-## Planned v0.1 capabilities
+## v0.1 capabilities
 
 | Component | Result | Update | Storage | Merge |
 | --- | --- | --- | --- | --- |
@@ -61,7 +67,7 @@ let () =
 | `Exact_median` | exact median | `O(log n)` | `O(n)` | no |
 | `Reservoir` | uniform sample | expected `O(1)` | `O(k)` | no |
 | `Kll` | approximate empirical quantiles | amortized compaction | capacity-controlled | compatible sketches |
-| `Bundle` | configured one-pass composition | follows components | follows components | no |
+| `Bundle` | configured univariate components in one pass | follows components | follows components | no |
 
 The conventions for empty streams, estimators, non-finite values, quantiles,
 seeds, and merges are fixed in [docs/CONTRACTS.md](docs/CONTRACTS.md).

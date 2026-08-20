@@ -1,3 +1,9 @@
 (tests
- (names test_summary test_bivariate test_exact_median test_reservoir test_kll)
+ (names
+  test_summary
+  test_bivariate
+  test_exact_median
+  test_reservoir
+  test_kll
+  test_bundle)
  (libraries streaming_statistics))

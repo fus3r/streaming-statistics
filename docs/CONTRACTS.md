@@ -10,6 +10,10 @@ Numeric accumulators accept finite IEEE-754 binary64 values. `NaN` and both
 infinities are rejected before state changes. Standalone reservoir sampling is
 polymorphic and does not impose this numeric restriction.
 
+`Bundle` applies the numeric policy before feeding its always-enabled `Summary`
+and any configured exact median, reservoir, or KLL component. Rejected input
+leaves every component unchanged.
+
 `Summary` and `Bivariate` observation counts use `int64`. An update or merge
 that would exceed `Int64.max_int` reports `Count_overflow` without changing its
 input.
@@ -96,7 +100,7 @@ requires equal capacity parameters and an explicit seed for compactions in the
 result. A merged sketch need not equal one built from the concatenated raw
 streams.
 
-## Planned capability matrix
+## Capability matrix
 
 | Component | Exact | Fixed-size state | Merge | Randomized |
 | --- | --- | --- | --- | --- |

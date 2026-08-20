@@ -1,5 +1,5 @@
 (library
  (name streaming_statistics)
  (public_name streaming-statistics)
- (modules Summary Bivariate Float_heap Exact_median Reservoir Kll)
+ (modules Summary Bivariate Float_heap Exact_median Reservoir Kll Bundle)
  (private_modules Float_heap))
