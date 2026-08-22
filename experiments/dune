@@ -6,6 +6,10 @@
  (name reservoir_uniformity)
  (libraries streaming_statistics))
 
+(executable
+ (name experiment_driver)
+ (libraries streaming_statistics))
+
 (rule
  (alias runtest)
  (action

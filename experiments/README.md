@@ -1,5 +1,15 @@
 # Numerical checks
 
+The tracked J10 moment-stability table and figure have a separate, written
+protocol in [docs/EXPERIMENTS.md](../docs/EXPERIMENTS.md). Regenerate them with:
+
+```sh
+python3 experiments/run_moment_stability.py
+```
+
+This artifact-producing experiment remains outside `dune runtest`; the test
+alias keeps only deterministic regression gates.
+
 ## Reservoir uniformity diagnostic
 
 The reservoir check runs the fixed Algorithm R protocol over 50,000 explicit

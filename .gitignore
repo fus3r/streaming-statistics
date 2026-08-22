@@ -1,4 +1,6 @@
 /_build/
 /_opam/
+/experiments/generated/
+/experiments/__pycache__/
 *.install
 *.merlin

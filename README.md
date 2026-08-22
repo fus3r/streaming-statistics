@@ -72,12 +72,42 @@ let () =
 The conventions for empty streams, estimators, non-finite values, quantiles,
 seeds, and merges are fixed in [docs/CONTRACTS.md](docs/CONTRACTS.md).
 
-## Numerical check
+## Numerical checks
 
 `dune runtest` also compares sequential Welford updates and a partitioned Chan
 merge with a high-precision oracle on a small cancellation-prone corpus. The
 private naive baseline and tolerances are documented in
 [experiments/README.md](experiments/README.md).
+
+The larger J10 experiment varies offset, dispersion, stream order, partition
+size, and reduction shape for univariate and paired moments. Reproduce its
+2,880-row table and figure with:
+
+```sh
+python3 -m pip install -r requirements-experiments.txt
+python3 experiments/run_moment_stability.py
+```
+
+On the sorted `1e12`-offset stream, the population-variance oracle is
+`0.0008499154`. Sequential Welford returns `0.003354809`, a balanced Chan
+reduction over 257-value chunks returns `0.0008513299`, and the naive identity
+returns about `8.75e10`. This case does not establish a universally preferable
+tree; it shows why the reduction shape is recorded.
+
+For the same partition size, the 32 fixed random-pair schedules produce 32
+distinct variance estimates on that stream. Their absolute errors range from
+`4.80e-7` to `3.16e-6`, with median `1.75e-6`. The paired large-offset stream
+also produces 32 distinct covariance estimates, with observed relative error
+from `1.49e-5` to `4.49e-5` and median `3.64e-5`. These fixed-schedule ranges are
+not confidence intervals, worst cases, or error bounds.
+
+With 1,024-pair chunks, 34 Chan correlation rows on the large-offset case are
+undefined because their raw ratios fall materially outside `[-1, 1]`; the CSV
+keeps them as `nan` instead of clamping them to a plausible endpoint. See the
+[protocol](docs/EXPERIMENTS.md), [raw table](results/moment_stability.csv), and
+[manifest](results/manifest.json) before interpreting the figure.
+
+![Moment stability experiment](figures/moment_stability.svg)
 
 ## Scope
 

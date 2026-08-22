@@ -1,0 +1,228 @@
+{
+  "artifacts": {
+    "figures/moment_stability.svg": "eb1e5d9115855757fad01e58b53d2642a7fbea53ec1a646b0890f1ee060984d1",
+    "results/moment_stability.csv": "b74998492e98da6880df35f808ca0c8f5e37208d06d094a3ec9cffa96cfc1eea"
+  },
+  "checks": {
+    "correlation_max_absolute_error_by_method": {
+      "chan_balanced": 0.00013342342751927963,
+      "chan_left": 0.00012860037267861687,
+      "chan_random": 0.0001619419280300565,
+      "welford": 0.00010806475185989893
+    },
+    "covariance_max_relative_error_by_method": {
+      "chan_balanced": 0.00023355848175944123,
+      "chan_left": 0.00023134667889905877,
+      "chan_random": 0.00024479673040687575,
+      "welford": 0.00011956646698177672
+    },
+    "intercept_max_absolute_error_by_method": {
+      "chan_balanced": 530878189.7454418,
+      "chan_left": 530435885.86067617,
+      "chan_random": 549810493.8098949,
+      "welford": 48499722.78938714
+    },
+    "random_pair_schedule_sensitivity": {
+      "chunk_size": 257,
+      "schedule_count": 32,
+      "summaries": {
+        "population_covariance": {
+          "paired_centered": {
+            "distinct_binary64_results": 4,
+            "error_metric": "relative_error",
+            "maximum": 4.463073528927671e-16,
+            "median": 8.965788262350533e-17,
+            "minimum": 8.866685251112555e-17
+          },
+          "paired_large_offset": {
+            "distinct_binary64_results": 32,
+            "error_metric": "relative_error",
+            "maximum": 4.4923569482809606e-05,
+            "median": 3.6371750841525586e-05,
+            "minimum": 1.4877459273731855e-05
+          },
+          "paired_scale_imbalanced": {
+            "distinct_binary64_results": 32,
+            "error_metric": "relative_error",
+            "maximum": 8.209538083072676e-06,
+            "median": 3.42414475412733e-06,
+            "minimum": 1.7991905110676915e-07
+          }
+        },
+        "population_variance": {
+          "centered": {
+            "distinct_binary64_results": 3,
+            "error_metric": "ulp_error",
+            "maximum": 2.029945986498667,
+            "median": 0.02994598649866669,
+            "minimum": 0.02994598649866669
+          },
+          "centered_wide": {
+            "distinct_binary64_results": 4,
+            "error_metric": "ulp_error",
+            "maximum": 2.5904276612413195,
+            "median": 0.5904276612413194,
+            "minimum": 0.5904276612413194
+          },
+          "large_offset_interleaved": {
+            "distinct_binary64_results": 32,
+            "error_metric": "ulp_error",
+            "maximum": 673829992845.814,
+            "median": 435651202956.31396,
+            "minimum": 360465008222.81396
+          },
+          "large_offset_shuffled": {
+            "distinct_binary64_results": 32,
+            "error_metric": "ulp_error",
+            "maximum": 1944347068177.186,
+            "median": 1265425001720.186,
+            "minimum": 736349898581.186
+          },
+          "large_offset_sorted": {
+            "distinct_binary64_results": 32,
+            "error_metric": "ulp_error",
+            "maximum": 29102177764121.812,
+            "median": 16150795068368.314,
+            "minimum": 4426465220616.814
+          }
+        }
+      }
+    },
+    "slope_max_relative_error_by_method": {
+      "chan_balanced": 0.0002123119058265709,
+      "chan_left": 0.00021213501707409627,
+      "chan_random": 0.00021988342342715668,
+      "welford": 0.00012020487403100258
+    },
+    "undefined_correlation_rows": {
+      "by_method": {
+        "chan_balanced": 1,
+        "chan_left": 1,
+        "chan_random": 32
+      },
+      "total": 34
+    },
+    "variance_max_ulp_error_by_method": {
+      "chan_balanced": 216428711494275.8,
+      "chan_left": 958379368618800.9,
+      "chan_random": 206203864677060.8,
+      "naive": 8.06780077173924e+29,
+      "welford": 2.310356321199885e+16
+    }
+  },
+  "command": "python3 experiments/run_moment_stability.py",
+  "datasets": {
+    "centered": {
+      "path": "experiments/generated/moments_centered.txt",
+      "rows": 12000,
+      "sha256": "1ad5d2dca08d6b094b93921c4783d0ea8838d73eda82e9fad71361337140d4e4"
+    },
+    "centered_wide": {
+      "path": "experiments/generated/moments_centered_wide.txt",
+      "rows": 12000,
+      "sha256": "c3ccdf02feb3ced318baa49bf65626c64a6f6f94f02769ca1ab1fe6a1be6dbc6"
+    },
+    "large_offset_interleaved": {
+      "path": "experiments/generated/moments_large_offset_interleaved.txt",
+      "rows": 12000,
+      "sha256": "819e28d1b268d9d72d147abadd46e98b40ea7cbad3214719d86c4444ab85ee0c"
+    },
+    "large_offset_shuffled": {
+      "path": "experiments/generated/moments_large_offset_shuffled.txt",
+      "rows": 12000,
+      "sha256": "6d2da90c7c5d2a3a019e3e2943733ee787fe326764cadf045ea4c87237ec0635"
+    },
+    "large_offset_sorted": {
+      "path": "experiments/generated/moments_large_offset_sorted.txt",
+      "rows": 12000,
+      "sha256": "78b0a44bfb2e346f090346f6029b7d6db65e8a59abefa7e722bd10440f8bdbc2"
+    },
+    "paired_centered": {
+      "path": "experiments/generated/moments_paired_centered.csv",
+      "rows": 12000,
+      "sha256": "8370b0237aa3c46b28183f368242ac3148a922caf0b5ec0c0de3a4aea1f1437a"
+    },
+    "paired_large_offset": {
+      "path": "experiments/generated/moments_paired_large_offset.csv",
+      "rows": 12000,
+      "sha256": "597acf290201b973eb08024ccca697665db5884576d6c2f2a9ad38ae766513ca"
+    },
+    "paired_scale_imbalanced": {
+      "path": "experiments/generated/moments_paired_scale_imbalanced.csv",
+      "rows": 12000,
+      "sha256": "4d85f675817e9aa017bf6d465f0df916121298fe3a2911cb91ae7c1ea31a25d4"
+    }
+  },
+  "environment": {
+    "dune": "3.24.2",
+    "matplotlib": "3.10.6",
+    "ocaml": "5.5.0",
+    "platform": "macOS-15.7.7-arm64-arm-64bit-Mach-O",
+    "python": "3.13.7"
+  },
+  "experiment_source_sha256": "8074f8ce41c0db8698abf888689eb5544a3ab90125c2e32674413e63ec8d50ac",
+  "limitations": [
+    "The inputs are controlled synthetic streams, not a market model.",
+    "The 32 random-pair schedules are a fixed empirical sample, not a uniform sample of binary trees or an error bound.",
+    "Floating-point merge results are not expected to be bitwise associative.",
+    "Regression intercept error is strongly conditioned by predictor centering and should not be read as a universal OLS accuracy score."
+  ],
+  "parameters": {
+    "base_scale": 0.001,
+    "chunk_sizes": [
+      31,
+      257,
+      1024
+    ],
+    "cycle_center": 50,
+    "cycle_modulus": 101,
+    "cycle_multiplier": 37,
+    "dataset_size": 12000,
+    "large_offset": 1000000000000.0,
+    "merge_seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31
+    ],
+    "plot_chunk_size": 257,
+    "shuffle_seed": 731,
+    "wide_scale": 1000.0
+  },
+  "protocol": {
+    "deterministic_rows_are_not_repeated_per_seed": true,
+    "expected_data_rows": 2880,
+    "observed_data_rows": 2880,
+    "random_pair_schedule": "Draw two distinct list positions in order, merge left into right, and repeat; this is not a uniform sample of binary trees.",
+    "summary_and_bivariate_schedules_are_paired": true
+  },
+  "schema_version": 1
+}
