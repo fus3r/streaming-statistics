@@ -1,14 +1,18 @@
 # Numerical checks
 
-The tracked J10 moment-stability table and figure have a separate, written
-protocol in [docs/EXPERIMENTS.md](../docs/EXPERIMENTS.md). Regenerate them with:
+The tracked J10 moment-stability and J11 quantile-accuracy artifacts have a
+written protocol in [docs/EXPERIMENTS.md](../docs/EXPERIMENTS.md). Regenerate
+them in order with:
 
 ```sh
 python3 experiments/run_moment_stability.py
+python3 experiments/run_quantile_accuracy.py
 ```
 
-This artifact-producing experiment remains outside `dune runtest`; the test
-alias keeps only deterministic regression gates.
+The second command validates the moment artifact hashes before extending the
+shared manifest. Both artifact-producing experiments remain outside
+`dune runtest`; the test alias keeps only deterministic regression gates and
+does not turn fixed-seed KLL observations into probabilistic thresholds.
 
 ## Reservoir uniformity diagnostic
 

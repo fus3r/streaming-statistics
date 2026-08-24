@@ -215,15 +215,108 @@ let run_bivariate_stability path chunk_size seed =
     (fun (name, summary) -> print_bivariate_estimate name summary)
     estimates
 
+let add_median median value =
+  match Exact_median.add median value with
+  | Ok () -> ()
+  | Error `Non_finite -> assert false
+
+let add_kll sketch value =
+  match Kll.add sketch value with
+  | Ok () -> ()
+  | Error `Non_finite -> assert false
+  | Error `Count_overflow -> failwith "KLL count overflow"
+
+let exact_median values =
+  let median = Exact_median.create () in
+  Array.iter (add_median median) values;
+  median
+
+let sequential_kll values capacity seed =
+  let sketch = Kll.create ~capacity ~seed () in
+  Array.iter (add_kll sketch) values;
+  sketch
+
+let merged_kll values capacity partition_seed partition_size merge_seed =
+  if partition_size <= 0 then invalid_arg "partition size must be positive";
+  let partition_rng = Random.State.make [| partition_seed |] in
+  let rec chunks start output =
+    if start >= Array.length values then List.rev output
+    else
+      let length = Int.min partition_size (Array.length values - start) in
+      let seed = Random.State.bits partition_rng in
+      let sketch = Kll.create ~capacity ~seed () in
+      for index = start to start + length - 1 do
+        add_kll sketch values.(index)
+      done;
+      chunks (start + length) (sketch :: output)
+  in
+  let merge_rng = Random.State.make [| merge_seed |] in
+  let merge left right =
+    match Kll.merge ~seed:(Random.State.bits merge_rng) left right with
+    | Ok sketch -> sketch
+    | Error (`Incompatible_capacity _) -> assert false
+    | Error `Count_overflow -> failwith "KLL merge count overflow"
+  in
+  merge_balanced
+    ~empty:(fun () -> Kll.create ~capacity ~seed:partition_seed ())
+    ~merge (chunks 0 [])
+
+let print_quantiles ~construction ?partition_size ?merge_seed median sketch
+    quantiles =
+  let optional_int = function None -> "" | Some value -> string_of_int value in
+  Printf.printf
+    "kind,construction,partition_size,merge_seed,q,value,count,retained\n";
+  Printf.printf "exact_median,exact,,,0.5,%.17g,%Ld,%Ld\n"
+    (option_float (Exact_median.value median))
+    (Exact_median.count median) (Exact_median.count median);
+  List.iter
+    (fun q ->
+      Printf.printf "kll,%s,%s,%s,%.17g,%.17g,%Ld,%d\n" construction
+        (optional_int partition_size) (optional_int merge_seed) q
+        (option_float (Kll.quantile sketch ~q))
+        (Kll.count sketch) (Kll.retained sketch))
+    quantiles
+
+let check_kll sketch =
+  match Kll.check_invariants sketch with
+  | Ok () -> ()
+  | Error message -> failf "KLL invariant failure: %s" message
+
+let run_quantiles path capacity seed quantiles =
+  let values = read_values path in
+  if Array.length values = 0 then invalid_arg "quantile input is empty";
+  let median = exact_median values in
+  let sketch = sequential_kll values capacity seed in
+  check_kll sketch;
+  print_quantiles ~construction:"sequential" median sketch quantiles
+
+let run_merged_quantiles path capacity partition_seed partition_size merge_seed
+    quantiles =
+  let values = read_values path in
+  if Array.length values = 0 then invalid_arg "quantile input is empty";
+  let median = exact_median values in
+  let sketch =
+    merged_kll values capacity partition_seed partition_size merge_seed
+  in
+  check_kll sketch;
+  print_quantiles ~construction:"balanced_merge" ~partition_size ~merge_seed
+    median sketch quantiles
+
 let usage () =
   prerr_endline
     "usage:\n\
     \  experiment_driver stability INPUT CHUNK_SIZE MERGE_SEED\n\
-    \  experiment_driver bivariate-stability INPUT CHUNK_SIZE MERGE_SEED";
+    \  experiment_driver bivariate-stability INPUT CHUNK_SIZE MERGE_SEED\n\
+    \  experiment_driver quantiles INPUT CAPACITY SEED Q [Q ...]\n\
+    \  experiment_driver quantiles-merged INPUT CAPACITY PARTITION_SEED \
+     PARTITION_SIZE MERGE_SEED Q [Q ...]";
   exit 2
 
 let int_arg name value =
   try int_of_string value with Failure _ -> failf "invalid %s: %s" name value
+
+let float_arg name value =
+  try Float.of_string value with Failure _ -> failf "invalid %s: %s" name value
 
 let () =
   match Array.to_list Sys.argv with
@@ -233,4 +326,16 @@ let () =
   | [ _; "bivariate-stability"; path; chunk_size; seed ] ->
       run_bivariate_stability path (int_arg "chunk size" chunk_size)
         (int_arg "merge seed" seed)
+  | _ :: "quantiles" :: path :: capacity :: seed :: quantiles
+    when quantiles <> [] ->
+      run_quantiles path (int_arg "capacity" capacity) (int_arg "seed" seed)
+        (List.map (float_arg "quantile") quantiles)
+  | _ :: "quantiles-merged" :: path :: capacity :: partition_seed
+    :: partition_size :: merge_seed :: quantiles
+    when quantiles <> [] ->
+      run_merged_quantiles path (int_arg "capacity" capacity)
+        (int_arg "partition seed" partition_seed)
+        (int_arg "partition size" partition_size)
+        (int_arg "merge seed" merge_seed)
+        (List.map (float_arg "quantile") quantiles)
   | _ -> usage ()

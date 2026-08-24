@@ -109,6 +109,28 @@ keeps them as `nan` instead of clamping them to a plausible endpoint. See the
 
 ![Moment stability experiment](figures/moment_stability.svg)
 
+The J11 quantile experiment compares `Exact_median` and KLL with a full sort on
+normal, signed heavy-tailed, regime-change, and duplicate-heavy streams. KLL is
+run at capacities 32, 64, and 128 with five fixed seeds, both sequentially and
+through one pre-specified balanced merge of 257-value partitions. Reproduce its
+844-row table and figure with:
+
+```sh
+python3 experiments/run_quantile_accuracy.py
+```
+
+All four exact medians match the sort oracle. In the fixed signed-Pareto trials,
+the largest endpoint relative-value error occurs at `q = 0.99`, capacity 32,
+seed 83: a `0.895%` normalized rank error accompanies a `397.3%` relative-value
+error. This retained observation illustrates that small observed rank error
+does not imply small error in the units of a sparse tail; it is not a
+worst-case bound or a risk model. The
+[raw table](results/quantile_accuracy.csv),
+[protocol](docs/EXPERIMENTS.md), and [manifest](results/manifest.json) retain
+the full grid and its limitations.
+
+![Quantile accuracy experiment](figures/quantile_accuracy.svg)
+
 ## Scope
 
 Version 0.1 is append-only. Sliding windows, retractions, serialization,

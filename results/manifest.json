@@ -1,7 +1,9 @@
 {
   "artifacts": {
     "figures/moment_stability.svg": "eb1e5d9115855757fad01e58b53d2642a7fbea53ec1a646b0890f1ee060984d1",
-    "results/moment_stability.csv": "b74998492e98da6880df35f808ca0c8f5e37208d06d094a3ec9cffa96cfc1eea"
+    "figures/quantile_accuracy.svg": "8bde8d324e1511a14a0db9c6cff4c83995c9ac17c34b8a90c81e69b03ad01e3c",
+    "results/moment_stability.csv": "b74998492e98da6880df35f808ca0c8f5e37208d06d094a3ec9cffa96cfc1eea",
+    "results/quantile_accuracy.csv": "b35a2d2c6edad113794bed583546dadb6f9362eabd94785996b8f08b5abdfb7c"
   },
   "checks": {
     "correlation_max_absolute_error_by_method": {
@@ -16,11 +18,70 @@
       "chan_random": 0.00024479673040687575,
       "welford": 0.00011956646698177672
     },
+    "exact_median_max_absolute_error": 0.0,
     "intercept_max_absolute_error_by_method": {
       "chan_balanced": 530878189.7454418,
       "chan_left": 530435885.86067617,
       "chan_random": 549810493.8098949,
       "welford": 48499722.78938714
+    },
+    "kll_heavy_tail_max_observed_relative_value_error": {
+      "capacity": 32,
+      "construction": "sequential",
+      "corresponding_absolute_value_error": 54.8814627361224,
+      "corresponding_rank_error": 0.008950447522376118,
+      "dataset": "heavy_tail",
+      "maximum_relative_value_error": 3.9731163631725073,
+      "observed_value": 68.6946657031505,
+      "oracle_value": 13.813202967028108,
+      "q": 0.99,
+      "quantiles": [
+        0.01,
+        0.99
+      ],
+      "seed": 83
+    },
+    "kll_max_observed_rank_error_by_construction_and_capacity": {
+      "balanced_merge": {
+        "128": 0.011800590029501476,
+        "32": 0.03610180509025451,
+        "64": 0.013900695034751737
+      },
+      "sequential": {
+        "128": 0.015550777538876943,
+        "32": 0.05935296764838242,
+        "64": 0.026451322566128307
+      }
+    },
+    "kll_retained_range_by_construction_and_capacity": {
+      "balanced_merge": {
+        "128": {
+          "maximum": 100,
+          "minimum": 100
+        },
+        "32": {
+          "maximum": 68,
+          "minimum": 68
+        },
+        "64": {
+          "maximum": 105,
+          "minimum": 105
+        }
+      },
+      "sequential": {
+        "128": {
+          "maximum": 163,
+          "minimum": 163
+        },
+        "32": {
+          "maximum": 35,
+          "minimum": 35
+        },
+        "64": {
+          "maximum": 125,
+          "minimum": 125
+        }
+      }
     },
     "random_pair_schedule_sensitivity": {
       "chunk_size": 257,
@@ -110,7 +171,10 @@
       "welford": 2.310356321199885e+16
     }
   },
-  "command": "python3 experiments/run_moment_stability.py",
+  "commands": {
+    "moment_stability": "python3 experiments/run_moment_stability.py",
+    "quantile_accuracy": "python3 experiments/run_quantile_accuracy.py"
+  },
   "datasets": {
     "centered": {
       "path": "experiments/generated/moments_centered.txt",
@@ -121,6 +185,11 @@
       "path": "experiments/generated/moments_centered_wide.txt",
       "rows": 12000,
       "sha256": "c3ccdf02feb3ced318baa49bf65626c64a6f6f94f02769ca1ab1fe6a1be6dbc6"
+    },
+    "heavy_tail": {
+      "path": "experiments/generated/quantiles_heavy_tail.txt",
+      "rows": 20000,
+      "sha256": "b591f9c05b3d82e260825da30fb3a734b751b5ff28d5e7a385d4774b9327b902"
     },
     "large_offset_interleaved": {
       "path": "experiments/generated/moments_large_offset_interleaved.txt",
@@ -137,6 +206,16 @@
       "rows": 12000,
       "sha256": "78b0a44bfb2e346f090346f6029b7d6db65e8a59abefa7e722bd10440f8bdbc2"
     },
+    "many_ties": {
+      "path": "experiments/generated/quantiles_many_ties.txt",
+      "rows": 20000,
+      "sha256": "9f6603cad652dc544d8e8446ea4f26ffea9981ba0a93a3fe562768519d4fbcb1"
+    },
+    "normal": {
+      "path": "experiments/generated/quantiles_normal.txt",
+      "rows": 20000,
+      "sha256": "88e3b5ec964e3264813bea937454d1e9ad11a1eb68a4c6332bc4bd1ace4525ff"
+    },
     "paired_centered": {
       "path": "experiments/generated/moments_paired_centered.csv",
       "rows": 12000,
@@ -151,6 +230,11 @@
       "path": "experiments/generated/moments_paired_scale_imbalanced.csv",
       "rows": 12000,
       "sha256": "4d85f675817e9aa017bf6d465f0df916121298fe3a2911cb91ae7c1ea31a25d4"
+    },
+    "regime_change": {
+      "path": "experiments/generated/quantiles_regime_change.txt",
+      "rows": 20000,
+      "sha256": "8fbfcd6d13582e68a863c9b90a1321638baed7ca71e4de8197708203fb9eb7a0"
     }
   },
   "environment": {
@@ -160,12 +244,16 @@
     "platform": "macOS-15.7.7-arm64-arm-64bit-Mach-O",
     "python": "3.13.7"
   },
-  "experiment_source_sha256": "8074f8ce41c0db8698abf888689eb5544a3ab90125c2e32674413e63ec8d50ac",
+  "experiment_source_sha256": "15f04f30982a50a4e32a2c6bdf7f55c3d4f2bb2a8f98c9504345f191829c345e",
   "limitations": [
     "The inputs are controlled synthetic streams, not a market model.",
     "The 32 random-pair schedules are a fixed empirical sample, not a uniform sample of binary trees or an error bound.",
     "Floating-point merge results are not expected to be bitwise associative.",
-    "Regression intercept error is strongly conditioned by predictor centering and should not be read as a universal OLS accuracy score."
+    "Regression intercept error is strongly conditioned by predictor centering and should not be read as a universal OLS accuracy score.",
+    "KLL rows characterize fixed datasets and seeds; they are not a proof of a tail bound.",
+    "KLL controls rank error, not value error; value-error observations depend on the distribution and scale.",
+    "The balanced KLL construction is one fixed 257-item partition tree, not a survey of every merge topology.",
+    "Retained values measure logical sketch payload; unused allocated slots, process RSS, and allocator overhead are excluded."
   ],
   "parameters": {
     "base_scale": 0.001,
@@ -214,6 +302,72 @@
       31
     ],
     "plot_chunk_size": 257,
+    "quantile_accuracy": {
+      "balanced_merge": {
+        "merge_seed": "20260812 + quantile seed",
+        "partition_seed": "quantile seed initializes per-partition seeds",
+        "partition_size": 257
+      },
+      "capacities": [
+        32,
+        64,
+        128
+      ],
+      "dataset_generation": {
+        "heavy_tail": {
+          "negative_probability": 0.5,
+          "pareto_shape": 1.5,
+          "seed": 2207
+        },
+        "many_ties": {
+          "seed": 4409,
+          "values": [
+            -3.0,
+            -1.0,
+            0.0,
+            1.0,
+            5.0
+          ],
+          "weights": [
+            5,
+            15,
+            50,
+            20,
+            10
+          ]
+        },
+        "normal": {
+          "mean": 0.0,
+          "seed": 1103,
+          "standard_deviation": 1.0
+        },
+        "regime_change": {
+          "first_mean": -2.0,
+          "first_standard_deviation": 0.5,
+          "second_mean": 3.0,
+          "second_standard_deviation": 1.2,
+          "seed": 3301,
+          "split_index": 10000
+        }
+      },
+      "dataset_size": 20000,
+      "quantiles": [
+        0.01,
+        0.1,
+        0.25,
+        0.5,
+        0.75,
+        0.9,
+        0.99
+      ],
+      "seeds": [
+        11,
+        29,
+        47,
+        83,
+        101
+      ]
+    },
     "shuffle_seed": 731,
     "wide_scale": 1000.0
   },
@@ -221,8 +375,15 @@
     "deterministic_rows_are_not_repeated_per_seed": true,
     "expected_data_rows": 2880,
     "observed_data_rows": 2880,
+    "quantile_accuracy": {
+      "balanced_merge_topology": "fixed balanced tree over consecutive 257-value partitions",
+      "expected_data_rows": 844,
+      "lower_quantile_target": "floor(q * (n - 1)) using exact binary64-rational q",
+      "observed_data_rows": 844,
+      "rank_error": "distance from the target index to the returned value's tie interval, divided by n - 1"
+    },
     "random_pair_schedule": "Draw two distinct list positions in order, merge left into right, and repeat; this is not a uniform sample of binary trees.",
     "summary_and_bivariate_schedules_are_paired": true
   },
-  "schema_version": 1
+  "schema_version": 2
 }
