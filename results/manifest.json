@@ -172,6 +172,7 @@
     }
   },
   "commands": {
+    "all": "python3 experiments/run_experiments.py",
     "moment_stability": "python3 experiments/run_moment_stability.py",
     "quantile_accuracy": "python3 experiments/run_quantile_accuracy.py"
   },
@@ -244,7 +245,7 @@
     "platform": "macOS-15.7.7-arm64-arm-64bit-Mach-O",
     "python": "3.13.7"
   },
-  "experiment_source_sha256": "15f04f30982a50a4e32a2c6bdf7f55c3d4f2bb2a8f98c9504345f191829c345e",
+  "experiment_source_sha256": "9762e448d8278fd1cef1b925f9e4206bdd35d81cd4d1c93b578d5f27e81d6536",
   "limitations": [
     "The inputs are controlled synthetic streams, not a market model.",
     "The 32 random-pair schedules are a fixed empirical sample, not a uniform sample of binary trees or an error bound.",
@@ -385,5 +386,33 @@
     "random_pair_schedule": "Draw two distinct list positions in order, merge left into right, and repeat; this is not a uniform sample of binary trees.",
     "summary_and_bivariate_schedules_are_paired": true
   },
-  "schema_version": 2
+  "schema_version": 3,
+  "source_provenance": {
+    "identity_field": "experiment_source_sha256",
+    "included_paths": [
+      "dune-project",
+      "requirements-experiments.txt",
+      "lib/dune",
+      "experiments/dune",
+      "experiments/experiment_driver.ml",
+      "experiments/run_moment_stability.py",
+      "experiments/run_quantile_accuracy.py",
+      "experiments/run_experiments.py",
+      "lib/bivariate.ml",
+      "lib/bundle.ml",
+      "lib/exact_median.ml",
+      "lib/float_heap.ml",
+      "lib/kll.ml",
+      "lib/reservoir.ml",
+      "lib/summary.ml",
+      "lib/bivariate.mli",
+      "lib/bundle.mli",
+      "lib/exact_median.mli",
+      "lib/kll.mli",
+      "lib/reservoir.mli",
+      "lib/summary.mli"
+    ],
+    "kind": "repository_source_snapshot",
+    "repository": "https://github.com/fus3r/streaming-statistics"
+  }
 }

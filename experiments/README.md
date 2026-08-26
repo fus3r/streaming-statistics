@@ -1,18 +1,18 @@
 # Numerical checks
 
-The tracked J10 moment-stability and J11 quantile-accuracy artifacts have a
-written protocol in [docs/EXPERIMENTS.md](../docs/EXPERIMENTS.md). Regenerate
-them in order with:
+The tracked moment-stability and quantile-accuracy artifacts have a written
+protocol in [docs/EXPERIMENTS.md](../docs/EXPERIMENTS.md). Regenerate both CSV
+files, both SVG figures, and the shared manifest with:
 
 ```sh
-python3 experiments/run_moment_stability.py
-python3 experiments/run_quantile_accuracy.py
+python3 experiments/run_experiments.py
 ```
 
-The second command validates the moment artifact hashes before extending the
-shared manifest. Both artifact-producing experiments remain outside
-`dune runtest`; the test alias keeps only deterministic regression gates and
-does not turn fixed-seed KLL observations into probabilistic thresholds.
+The command runs the two experiment stages in order, then verifies every
+dataset and tracked artifact against the hashes in the manifest. Both
+artifact-producing experiments remain outside `dune runtest`; the test alias
+keeps only deterministic regression gates and does not turn fixed-seed KLL
+observations into probabilistic thresholds.
 
 ## Reservoir uniformity diagnostic
 

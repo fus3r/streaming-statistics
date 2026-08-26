@@ -63,14 +63,14 @@ Using Python 3.10 or later:
 
 ```sh
 python3 -m pip install -r requirements-experiments.txt
-python3 experiments/run_moment_stability.py
+python3 experiments/run_experiments.py
 ```
 
-The command builds the OCaml driver and rewrites
-`results/moment_stability.csv`, `figures/moment_stability.svg`, and
-`results/manifest.json`. Temporary generated inputs are ignored by Git. A
-second run in the same recorded environment must reproduce all three tracked
-artifacts byte for byte.
+The command builds the OCaml driver and rewrites both experiment CSV files,
+both SVG figures, and `results/manifest.json`. Each figure is generated only
+after its CSV has been written and reloaded. Temporary generated inputs are
+ignored by Git. A second run in the same recorded environment must reproduce
+all five tracked outputs byte for byte.
 
 The protocol is motivated by Higham's analysis of summation order and by
 Demmel and Nguyen's work on reproducible reductions. Those references explain
@@ -135,7 +135,8 @@ error in the units of the data.
 
 ### Reproduction
 
-Using the same Python environment as the moment experiment:
+The complete reproduction command above also regenerates this experiment. Its
+quantile stage:
 
 ```sh
 python3 experiments/run_quantile_accuracy.py
@@ -148,9 +149,9 @@ driver, and rewrites `results/quantile_accuracy.csv`,
 rows and the complete 840-row KLL grid. A missing oracle, value error, rank
 error, seed, construction, capacity, or query makes generation fail.
 
-To regenerate both published experiments, run the moment command first and the
-quantile command second. Keeping the two commands separate preserves the
-staged artifact boundary while the shared manifest records both.
+`experiments/run_experiments.py` runs the moment stage first, so this validation
+is satisfied from a clean checkout, then verifies the dataset and artifact
+hashes recorded in the completed manifest.
 
 The rank-error protocol follows the quantity controlled by KLL; the value-error
 columns make the distinct, distribution-dependent error visible:

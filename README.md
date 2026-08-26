@@ -79,13 +79,14 @@ merge with a high-precision oracle on a small cancellation-prone corpus. The
 private naive baseline and tolerances are documented in
 [experiments/README.md](experiments/README.md).
 
-The larger J10 experiment varies offset, dispersion, stream order, partition
-size, and reduction shape for univariate and paired moments. Reproduce its
-2,880-row table and figure with:
+The numerical experiment suite varies offset, dispersion, stream order,
+partition size, and reduction shape for univariate and paired moments, then
+compares exact and approximate quantiles. Reproduce both CSV files, both SVG
+figures, and their manifest with one command:
 
 ```sh
 python3 -m pip install -r requirements-experiments.txt
-python3 experiments/run_moment_stability.py
+python3 experiments/run_experiments.py
 ```
 
 On the sorted `1e12`-offset stream, the population-variance oracle is
@@ -109,15 +110,11 @@ keeps them as `nan` instead of clamping them to a plausible endpoint. See the
 
 ![Moment stability experiment](figures/moment_stability.svg)
 
-The J11 quantile experiment compares `Exact_median` and KLL with a full sort on
+The quantile experiment compares `Exact_median` and KLL with a full sort on
 normal, signed heavy-tailed, regime-change, and duplicate-heavy streams. KLL is
 run at capacities 32, 64, and 128 with five fixed seeds, both sequentially and
-through one pre-specified balanced merge of 257-value partitions. Reproduce its
-844-row table and figure with:
-
-```sh
-python3 experiments/run_quantile_accuracy.py
-```
+through one pre-specified balanced merge of 257-value partitions. Its 844-row
+table and figure are included in the reproduction command above.
 
 All four exact medians match the sort oracle. In the fixed signed-Pareto trials,
 the largest endpoint relative-value error occurs at `q = 0.99`, capacity 32,

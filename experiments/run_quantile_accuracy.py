@@ -70,8 +70,8 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def source_digest() -> str:
-    paths = [
+def source_paths() -> list[Path]:
+    return [
         ROOT / "dune-project",
         ROOT / "requirements-experiments.txt",
         ROOT / "lib" / "dune",
@@ -79,11 +79,15 @@ def source_digest() -> str:
         ROOT / "experiments" / "experiment_driver.ml",
         ROOT / "experiments" / "run_moment_stability.py",
         ROOT / "experiments" / "run_quantile_accuracy.py",
+        ROOT / "experiments" / "run_experiments.py",
         *sorted((ROOT / "lib").glob("*.ml")),
         *sorted((ROOT / "lib").glob("*.mli")),
     ]
+
+
+def source_digest() -> str:
     digest = hashlib.sha256()
-    for path in paths:
+    for path in source_paths():
         relative = path.relative_to(ROOT).as_posix().encode()
         digest.update(len(relative).to_bytes(4, "big"))
         digest.update(relative)
@@ -555,13 +559,22 @@ def update_manifest(
         }
         for construction in constructions
     }
-    manifest["schema_version"] = 2
+    manifest["schema_version"] = 3
     manifest.pop("command", None)
     manifest["commands"] = {
+        "all": "python3 experiments/run_experiments.py",
         "moment_stability": "python3 experiments/run_moment_stability.py",
         "quantile_accuracy": "python3 experiments/run_quantile_accuracy.py",
     }
     manifest["experiment_source_sha256"] = source_digest()
+    manifest["source_provenance"] = {
+        "identity_field": "experiment_source_sha256",
+        "included_paths": [
+            path.relative_to(ROOT).as_posix() for path in source_paths()
+        ],
+        "kind": "repository_source_snapshot",
+        "repository": "https://github.com/fus3r/streaming-statistics",
+    }
     manifest["environment"] = {
         "platform": platform.platform(),
         "python": platform.python_version(),
