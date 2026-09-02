@@ -8,6 +8,8 @@ type error = [ `Non_finite | `Count_overflow ]
 (** Exhausted combined pair count. *)
 type merge_error = [ `Count_overflow ]
 
+(** Coefficients for the ordinary least-squares line
+    [y = slope * x + intercept]. *)
 type regression = { slope : float; intercept : float }
 
 (** [create ()] returns an empty mutable accumulator. *)
@@ -24,9 +26,10 @@ val add : t -> float -> float -> (unit, error) result
     either input. *)
 val merge : t -> t -> (t, merge_error) result
 
-(** Population covariance is [None] when empty; sample covariance requires at
-    least two pairs. *)
+(** Population covariance, or [None] for an empty stream. *)
 val population_covariance : t -> float option
+
+(** Sample covariance, or [None] with fewer than two pairs. *)
 val sample_covariance : t -> float option
 
 (** Pearson correlation, undefined when either marginal variance is zero or

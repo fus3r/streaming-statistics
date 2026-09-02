@@ -5,7 +5,10 @@
 
 type 'a t
 
+(** Invalid configured capacity. *)
 type create_error = [ `Invalid_capacity of int ]
+
+(** Exhausted [int64] observation count. *)
 type add_error = [ `Count_overflow ]
 
 val create : capacity:int -> seed:int -> ('a t, create_error) result
@@ -18,7 +21,10 @@ val add : 'a t -> 'a -> (unit, add_error) result
     [`Count_overflow] without changing the sample or random state if the
     64-bit observation count is full. *)
 
+(** Configured maximum sample size. *)
 val capacity : 'a t -> int
+
+(** Number of observations seen, including those not retained. *)
 val count : 'a t -> int64
 
 val sample : 'a t -> 'a array

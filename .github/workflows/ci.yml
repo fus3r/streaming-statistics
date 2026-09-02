@@ -23,8 +23,21 @@ jobs:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
 
       - name: Install dependencies
-        run: opam install . --deps-only --with-test
-      - name: Build
-        run: opam exec -- dune build @all
-      - name: Test
-        run: opam exec -- dune runtest
+        run: opam install . --deps-only --with-test --with-doc
+      - name: Check package metadata
+        run: opam lint streaming-statistics.opam
+      - name: Build source and install tested package
+        run: |
+          opam exec -- dune build @all @doc
+          opam install . --with-test --with-doc
+      - name: Run examples against the installed package
+        run: |
+          example_dir="$(mktemp -d)"
+          cp examples/basic.ml examples/quantiles.ml "$example_dir/"
+          cd "$example_dir"
+          opam exec -- ocamlfind ocamlopt -package streaming-statistics \
+            -linkpkg basic.ml -o basic.exe
+          opam exec -- ocamlfind ocamlopt -package streaming-statistics \
+            -linkpkg quantiles.ml -o quantiles.exe
+          ./basic.exe
+          ./quantiles.exe

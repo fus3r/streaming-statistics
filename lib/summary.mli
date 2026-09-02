@@ -25,14 +25,23 @@ val merge : t -> t -> (t, merge_error) result
 (** Compensated sum. The sum of an empty stream is [0.]. *)
 val sum : t -> float
 
-(** [min], [max], and [mean] are [None] for an empty stream. *)
+(** Minimum accepted observation, or [None] for an empty stream. *)
 val min : t -> float option
+
+(** Maximum accepted observation, or [None] for an empty stream. *)
 val max : t -> float option
+
+(** Arithmetic mean, or [None] for an empty stream. *)
 val mean : t -> float option
 
-(** Population quantities are [None] only when empty; sample quantities require
-    at least two observations. *)
+(** Population variance, or [None] for an empty stream. *)
 val population_variance : t -> float option
+
+(** Sample variance, or [None] with fewer than two observations. *)
 val sample_variance : t -> float option
+
+(** Population standard deviation, or [None] for an empty stream. *)
 val population_standard_deviation : t -> float option
+
+(** Sample standard deviation, or [None] with fewer than two observations. *)
 val sample_standard_deviation : t -> float option

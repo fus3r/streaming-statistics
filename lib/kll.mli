@@ -15,8 +15,10 @@
 
 type t
 
+(** Rejected value or exhausted [int64] observation count. *)
 type add_error = [ `Non_finite | `Count_overflow ]
 
+(** Incompatible configured capacities or exhausted combined count. *)
 type merge_error =
   [ `Incompatible_capacity of int * int | `Count_overflow ]
 
@@ -41,9 +43,11 @@ val count : t -> int64
 val retained : t -> int
 (** Number of values physically retained across all levels. *)
 
+(** Exact minimum of the accepted stream, or [None] for an empty sketch. *)
 val minimum : t -> float option
+
+(** Exact maximum of the accepted stream, or [None] for an empty sketch. *)
 val maximum : t -> float option
-(** Exact extrema of the accepted stream, or [None] for an empty sketch. *)
 
 val rank : t -> float -> float option
 (** [rank t value] is the estimated inclusive normalized rank
@@ -65,10 +69,11 @@ val quantile : t -> q:float -> float option
 val merge : seed:int -> t -> t -> (t, merge_error) result
 (** [merge ~seed left right] returns a new sketch and leaves its inputs
     unchanged. Inputs are compatible exactly when their configured capacities
-    match. The explicit result seed drives compactions caused by the merge and
-    all later additions. Given the same input states, argument order, result
-    seed, and OCaml toolchain, the result is deterministic. No bitwise
-    commutativity across merge orders is promised. *)
+    match; their original seeds need not match. The explicit result seed drives
+    compactions caused by the merge and all later additions. Given the same
+    input states, argument order, result seed, and OCaml toolchain, the result
+    is deterministic. No bitwise commutativity across merge orders is
+    promised. *)
 
 val check_invariants : t -> (unit, string) result
 (** Check level capacities, retained-value finiteness, extrema, and equality

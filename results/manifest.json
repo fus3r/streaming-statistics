@@ -245,7 +245,7 @@
     "platform": "macOS-15.7.7-arm64-arm-64bit-Mach-O",
     "python": "3.13.7"
   },
-  "experiment_source_sha256": "9762e448d8278fd1cef1b925f9e4206bdd35d81cd4d1c93b578d5f27e81d6536",
+  "experiment_source_sha256": "c57840998d631b1336c70ebac950a771a2b7c1624d7979d89307d63c15840e9e",
   "limitations": [
     "The inputs are controlled synthetic streams, not a market model.",
     "The 32 random-pair schedules are a fixed empirical sample, not a uniform sample of binary trees or an error bound.",
@@ -404,12 +404,14 @@
       "lib/float_heap.ml",
       "lib/kll.ml",
       "lib/reservoir.ml",
+      "lib/streaming_statistics.ml",
       "lib/summary.ml",
       "lib/bivariate.mli",
       "lib/bundle.mli",
       "lib/exact_median.mli",
       "lib/kll.mli",
       "lib/reservoir.mli",
+      "lib/streaming_statistics.mli",
       "lib/summary.mli"
     ],
     "kind": "repository_source_snapshot",

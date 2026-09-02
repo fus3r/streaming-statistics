@@ -5,6 +5,7 @@
 
 type t
 
+(** Rejected non-finite observation. *)
 type error = [ `Non_finite ]
 
 (** [create ()] returns an empty accumulator. *)
