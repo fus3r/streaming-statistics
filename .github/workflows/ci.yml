@@ -32,12 +32,15 @@ jobs:
           opam install . --with-test --with-doc
       - name: Run examples against the installed package
         run: |
+          opam_switch="$(opam switch show)"
           example_dir="$(mktemp -d)"
           cp examples/basic.ml examples/quantiles.ml "$example_dir/"
           cd "$example_dir"
-          opam exec -- ocamlfind ocamlopt -package streaming-statistics \
+          opam exec --switch="$opam_switch" -- \
+            ocamlfind ocamlopt -package streaming-statistics \
             -linkpkg basic.ml -o basic.exe
-          opam exec -- ocamlfind ocamlopt -package streaming-statistics \
+          opam exec --switch="$opam_switch" -- \
+            ocamlfind ocamlopt -package streaming-statistics \
             -linkpkg quantiles.ml -o quantiles.exe
           ./basic.exe
           ./quantiles.exe
